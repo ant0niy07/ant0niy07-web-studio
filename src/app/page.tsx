@@ -1,0 +1,2 @@
+import PortfolioSite from "@/components/PortfolioSite";import {site} from "@/config/site";
+export default function Page(){const jsonLd={"@context":"https://schema.org","@type":"ProfessionalService",name:"ant0niy07 Web Studio",url:site.url,areaServed:["Warszawa","Polska"],sameAs:[site.instagram],description:"Projektowanie i wdrażanie stron internetowych oraz sklepów dla firm."};return <><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd).replace(/</g,"\\u003c")}}/><PortfolioSite/></>}
