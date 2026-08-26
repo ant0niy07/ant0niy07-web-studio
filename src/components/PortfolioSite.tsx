@@ -1,60 +1,1341 @@
 "use client";
-import {useEffect,useId,useRef,useState} from "react";
-import {motion,AnimatePresence,useReducedMotion,useScroll,useTransform} from "motion/react";
-import {ArrowRight,Camera,Check,ChevronDown,Clipboard,Code2,ExternalLink,Globe2,Layers3,Menu,MessageCircle,MonitorSmartphone,Rocket,ShieldCheck,ShoppingBag,X,Zap} from "lucide-react";
-import {contact,contactHref} from "@/config/contact";
+import { useEffect, useId, useRef, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  motion,
+  AnimatePresence,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
+import {
+  ArrowRight,
+  Camera,
+  Check,
+  ChevronDown,
+  Clipboard,
+  Code2,
+  ExternalLink,
+  Globe2,
+  Layers3,
+  Menu,
+  MessageCircle,
+  MonitorSmartphone,
+  Rocket,
+  ShieldCheck,
+  ShoppingBag,
+  X,
+  Zap,
+} from "lucide-react";
+import { contact, contactHref } from "@/config/contact";
+import type { Locale } from "@/config/i18n";
+import { translate } from "@/config/i18n";
+import { useLocalizedDom } from "@/hooks/use-localized-dom";
 
-const nav=[["Realizacje","portfolio"],["Oferta","oferta"],["Cennik","cennik"],["Jak pracuję","proces"],["Kontakt","kontakt"]];
-const projects=[
- {cat:"Platformy",badge:"Wdrożenie komercyjne",title:"Platforma dla szkoły online iLikeLearn",desc:"Rozbudowana platforma edukacyjna prezentująca programy nauki, ofertę oraz ścieżkę zapisu dla kursantów. Projekty tej klasy wyceniam indywidualnie — od 2 500 PLN.",tags:["Platforma online","Edukacja","Dedykowany UX","Next.js"],tone:"violet",wide:true,url:"https://www.ilikelearn.com/"},
- {cat:"Lokalny biznes",badge:"Wdrożenie komercyjne",title:"Strona internetowa atelier Lenok",desc:"Elegancka witryna dla atelier z prezentacją marki, usług i kolekcji, przygotowana dla klientów polskojęzycznych.",tags:["Strona firmowa","Atelier","Mobile First"],tone:"blue",url:"https://www.lenok.pl/pl"},
- {cat:"Motoryzacja",badge:"Wersja demo",title:"SPECTRE Detailing House",desc:"Dynamiczna prezentacja usług detailingowych, pakietów, realizacji i szybkiej ścieżki do kontaktu.",tags:["Detailing","Galeria","Animacje"],tone:"emerald",url:"https://spectre-detailing-house.vercel.app/"},
- {cat:"Gastronomia",badge:"Wersja demo",title:"Vazi — kuchnia gruzińska",desc:"Wizualna strona restauracji z menu, prezentacją lokalu i wygodną ścieżką kontaktu dla gości.",tags:["Menu","Restauracja","Mobile UX"],tone:"amber",url:"https://vazi-kuchnia-gruzinska.vercel.app/"},
- {cat:"Beauty",badge:"Wersja demo",title:"Knight Barbershop",desc:"Charakterystyczna strona barbershopu z ofertą usług, wizerunkiem marki i czytelną ścieżką do rezerwacji.",tags:["Barbershop","Rezerwacja","Mobile UX"],tone:"rose",url:"https://knight-barbershop-one.vercel.app/"}
+const nav = [
+  ["Realizacje", "portfolio"],
+  ["Oferta", "oferta"],
+  ["Cennik", "cennik"],
+  ["Jak pracuję", "proces"],
+  ["Kontakt", "kontakt"],
 ];
-const faqs=[
- ["Czy naprawdę nie ma miesięcznej opłaty za hosting?","Standardową stronę firmową można uruchomić na platformie bez miesięcznego abonamentu, w ramach jej dostępnych limitów. Domena oraz płatne usługi zewnętrzne są rozliczane osobno."],
- ["Kiedy strona może być gotowa?","Prosta strona wizytówka może być gotowa w ciągu 3–5 dni roboczych od ustalenia zakresu i otrzymania potrzebnych materiałów. Większe projekty otrzymują indywidualny harmonogram."],
- ["Kiedy następuje płatność?","Rozliczenie następuje po prezentacji i akceptacji uzgodnionej wersji projektu. Szczegółowe warunki są potwierdzane przed rozpoczęciem współpracy."],
- ["Czy mogę później zmienić treści i zdjęcia?","Tak. Sposób aktualizacji zależy od rodzaju projektu. Możliwy jest prosty panel edycji lub późniejsze zmiany na zlecenie."],
- ["Czy pomożesz z domeną?","Tak. Pomagam wybrać, skonfigurować i podpiąć domenę do gotowej strony."],
- ["Czy tworzysz strony wielojęzyczne?","Tak. Strona może zostać przygotowana w kilku wersjach językowych zależnie od grupy klientów."],
- ["Czy sklep generuje dodatkowe koszty?","Operatorzy płatności, systemy dostaw, domeny oraz niektóre zewnętrzne narzędzia mogą pobierać własne opłaty. Wszystkie takie koszty są omawiane przed wdrożeniem."]
+const projects = [
+  {
+    cat: "Platformy",
+    badge: "Wdrożenie komercyjne",
+    title: "Platforma dla szkoły online iLikeLearn",
+    desc: "Rozbudowana platforma edukacyjna prezentująca programy nauki, ofertę oraz ścieżkę zapisu dla kursantów. Projekty tej klasy wyceniam indywidualnie — od 2 500 PLN.",
+    tags: ["Platforma online", "Edukacja", "Dedykowany UX", "Next.js"],
+    tone: "violet",
+    wide: true,
+    url: "https://www.ilikelearn.com/",
+    image: "/images/portfolio/ilikelearn-preview.webp",
+    alt: "Strona główna platformy edukacyjnej iLikeLearn",
+  },
+  {
+    cat: "Lokalny biznes",
+    badge: "Wdrożenie komercyjne",
+    title: "Strona internetowa atelier Lenok",
+    desc: "Elegancka witryna dla atelier z prezentacją marki, usług i kolekcji, przygotowana dla klientów polskojęzycznych.",
+    tags: ["Strona firmowa", "Atelier", "Mobile First"],
+    tone: "blue",
+    url: "https://www.lenok.pl/pl",
+    image: "/images/portfolio/lenok-preview.webp",
+    alt: "Strona główna atelier LenOK Poprawki Krawieckie",
+  },
+  {
+    cat: "Motoryzacja",
+    badge: "Wersja demo",
+    title: "SPECTRE Detailing House",
+    desc: "Dynamiczna prezentacja usług detailingowych, pakietów, realizacji i szybkiej ścieżki do kontaktu.",
+    tags: ["Detailing", "Galeria", "Animacje"],
+    tone: "emerald",
+    url: "https://spectre-detailing-house.vercel.app/",
+    image: "/images/portfolio/spectre-preview.webp",
+    alt: "Strona główna SPECTRE Detailing House",
+  },
+  {
+    cat: "Gastronomia",
+    badge: "Wersja demo",
+    title: "Vazi — kuchnia gruzińska",
+    desc: "Wizualna strona restauracji z menu, prezentacją lokalu i wygodną ścieżką kontaktu dla gości.",
+    tags: ["Menu", "Restauracja", "Mobile UX"],
+    tone: "amber",
+    url: "https://vazi-kuchnia-gruzinska.vercel.app/",
+    image: "/images/portfolio/vazi-preview.webp",
+    alt: "Strona główna restauracji VAZI Kuchnia Gruzińska",
+  },
+  {
+    cat: "Beauty i usługi",
+    badge: "Wersja demo",
+    title: "Knight Barbershop",
+    desc: "Charakterystyczna strona barbershopu z ofertą usług, wizerunkiem marki i czytelną ścieżką do rezerwacji.",
+    tags: ["Barbershop", "Rezerwacja", "Mobile UX"],
+    tone: "rose",
+    url: "https://knight-barbershop-one.vercel.app/",
+    image: "/images/portfolio/knight-preview.webp",
+    alt: "Strona główna Knight Barbershop",
+  },
 ];
-function Container({children,className=""}:{children:React.ReactNode,className?:string}){return <div className={`container ${className}`}>{children}</div>}
-function Reveal({children,className=""}:{children:React.ReactNode,className?:string}){const reduced=useReducedMotion();return <motion.div className={className} initial={reduced?false:{opacity:0,y:24}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.15}} transition={{duration:.45}}>{children}</motion.div>}
-function Heading({eyebrow,title,text,dark=false}:{eyebrow:string,title:string,text?:string,dark?:boolean}){return <div className={`section-heading ${dark?"dark":""}`}><span className="eyebrow">{eyebrow}</span><h2>{title}</h2>{text&&<p>{text}</p>}</div>}
-function Button({children,variant="primary",onClick,href}:{children:React.ReactNode,variant?:"primary"|"secondary"|"emerald",onClick?:()=>void,href?:string}){const cls=`button ${variant}`;return href?<motion.a whileHover={{scale:1.02}} whileTap={{scale:.98}} className={cls} href={href}>{children}</motion.a>:<motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} className={cls} onClick={onClick}>{children}</motion.button>}
+const faqs = [
+  [
+    "Czy naprawdę nie ma miesięcznej opłaty za hosting?",
+    "Standardową stronę firmową można uruchomić na platformie bez miesięcznego abonamentu, w ramach jej dostępnych limitów. Domena oraz płatne usługi zewnętrzne są rozliczane osobno.",
+  ],
+  [
+    "Kiedy strona może być gotowa?",
+    "Prosta strona wizytówka może być gotowa w ciągu 3–5 dni roboczych od ustalenia zakresu i otrzymania potrzebnych materiałów. Większe projekty otrzymują indywidualny harmonogram.",
+  ],
+  [
+    "Kiedy następuje płatność?",
+    "Rozliczenie następuje po prezentacji i akceptacji uzgodnionej wersji projektu. Szczegółowe warunki są potwierdzane przed rozpoczęciem współpracy.",
+  ],
+  [
+    "Czy mogę później zmienić treści i zdjęcia?",
+    "Tak. Sposób aktualizacji zależy od rodzaju projektu. Możliwy jest prosty panel edycji lub późniejsze zmiany na zlecenie.",
+  ],
+  [
+    "Czy pomożesz z domeną?",
+    "Tak. Pomagam wybrać, skonfigurować i podpiąć domenę do gotowej strony.",
+  ],
+  [
+    "Czy tworzysz strony wielojęzyczne?",
+    "Tak. Strona może zostać przygotowana w kilku wersjach językowych zależnie od grupy klientów.",
+  ],
+  [
+    "Czy sklep generuje dodatkowe koszty?",
+    "Operatorzy płatności, systemy dostaw, domeny oraz niektóre zewnętrzne narzędzia mogą pobierać własne opłaty. Wszystkie takie koszty są omawiane przed wdrożeniem.",
+  ],
+];
+function Container({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <div className={`container ${className}`}>{children}</div>;
+}
+function Reveal({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const reduced = useReducedMotion();
+  return (
+    <motion.div
+      className={className}
+      initial={reduced ? false : { opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.45 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+function Heading({
+  eyebrow,
+  title,
+  text,
+  dark = false,
+}: {
+  eyebrow: string;
+  title: string;
+  text?: string;
+  dark?: boolean;
+}) {
+  return (
+    <div className={`section-heading ${dark ? "dark" : ""}`}>
+      <span className="eyebrow">{eyebrow}</span>
+      <h2>{title}</h2>
+      {text && <p>{text}</p>}
+    </div>
+  );
+}
+function Button({
+  children,
+  variant = "primary",
+  onClick,
+  href,
+}: {
+  children: React.ReactNode;
+  variant?: "primary" | "secondary" | "emerald";
+  onClick?: () => void;
+  href?: string;
+}) {
+  const cls = `button ${variant}`;
+  return href ? (
+    <motion.a
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={cls}
+      href={href}
+    >
+      {children}
+    </motion.a>
+  ) : (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={cls}
+      onClick={onClick}
+    >
+      {children}
+    </motion.button>
+  );
+}
 
-function Header({openContact}:{openContact:()=>void}){const [open,setOpen]=useState(false);const first=useRef<HTMLAnchorElement>(null);useEffect(()=>{document.body.style.overflow=open?"hidden":"";if(open)first.current?.focus();const fn=(e:KeyboardEvent)=>e.key==="Escape"&&setOpen(false);addEventListener("keydown",fn);return()=>{document.body.style.overflow="";removeEventListener("keydown",fn)}},[open]);return <header><Container className="header-inner"><a href="#top" className="brand" aria-label="ant0niy07 — strona główna">ant0niy07 <small>Web Development</small></a><nav className="desktop-nav" aria-label="Główna">{nav.map(([n,id])=><a key={id} href={`#${id}`}>{n}</a>)}</nav><button className="header-cta" onClick={openContact}>Bezpłatna konsultacja <ArrowRight size={16}/></button><button className="menu-button" aria-label={open?"Zamknij menu":"Otwórz menu"} aria-expanded={open} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></Container><AnimatePresence>{open&&<motion.div className="mobile-menu" initial={{opacity:0,y:-12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-12}} role="dialog" aria-modal="true" aria-label="Menu"><nav>{nav.map(([n,id],i)=><a ref={i===0?first:undefined} key={id} href={`#${id}`} onClick={()=>setOpen(false)}>{n}</a>)}<button onClick={()=>{setOpen(false);openContact()}}>Bezpłatna konsultacja</button></nav></motion.div>}</AnimatePresence></header>}
+function LanguageSwitcher({
+  locale,
+  onSelect,
+  className = "",
+}: {
+  locale: Locale;
+  onSelect?: () => void;
+  className?: string;
+}) {
+  const router = useRouter(),
+    pathname = usePathname();
+  const choose = (next: Locale) => {
+    if (next === locale) {
+      onSelect?.();
+      return;
+    }
+    localStorage.setItem("ant0niy07-locale", next);
+    document.cookie = `locale=${next}; path=/; max-age=31536000; samesite=lax`;
+    const suffix = pathname.includes("polityka-prywatnosci")
+      ? "/polityka-prywatnosci"
+      : "";
+    router.push(`/${next}${suffix}`);
+    onSelect?.();
+  };
+  return (
+    <div
+      className={`language-switcher ${className}`}
+      role="group"
+      aria-label={locale === "ru" ? "Выбор языка" : "Wybór języka"}
+    >
+      <button
+        aria-label="Wybierz język polski"
+        aria-pressed={locale === "pl"}
+        onClick={() => choose("pl")}
+      >
+        PL <span aria-hidden="true">🇵🇱</span>
+      </button>
+      <button
+        aria-label="Выбрать русский язык"
+        aria-pressed={locale === "ru"}
+        onClick={() => choose("ru")}
+      >
+        RU
+      </button>
+    </div>
+  );
+}
+function Header({
+  openContact,
+  locale,
+}: {
+  openContact: () => void;
+  locale: Locale;
+}) {
+  const [open, setOpen] = useState(false);
+  const first = useRef<HTMLAnchorElement>(null);
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    if (open) first.current?.focus();
+    const fn = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    addEventListener("keydown", fn);
+    return () => {
+      document.body.style.overflow = "";
+      removeEventListener("keydown", fn);
+    };
+  }, [open]);
+  return (
+    <header>
+      <Container className="header-inner">
+        <a href="#top" className="brand" aria-label="ant0niy07 — strona główna">
+          ant0niy07 <small>Web Development</small>
+        </a>
+        <nav className="desktop-nav" aria-label="Główna">
+          {nav.map(([n, id]) => (
+            <a key={id} href={`#${id}`}>
+              {n}
+            </a>
+          ))}
+        </nav>
+        <LanguageSwitcher locale={locale} />
+        <button className="header-cta" onClick={openContact}>
+          Bezpłatna konsultacja <ArrowRight size={16} />
+        </button>
+        <button
+          className="menu-button"
+          aria-label={open ? "Zamknij menu" : "Otwórz menu"}
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? <X /> : <Menu />}
+        </button>
+      </Container>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="mobile-menu"
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu"
+          >
+            <nav>
+              {nav.map(([n, id], i) => (
+                <a
+                  ref={i === 0 ? first : undefined}
+                  key={id}
+                  href={`#${id}`}
+                  onClick={() => setOpen(false)}
+                >
+                  {n}
+                </a>
+              ))}
+              <LanguageSwitcher
+                locale={locale}
+                className="mobile-languages"
+                onSelect={() => setOpen(false)}
+              />
+              <button
+                onClick={() => {
+                  setOpen(false);
+                  openContact();
+                }}
+              >
+                Bezpłatna konsultacja
+              </button>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
 
-function BuildSequenceHero(){const reduced=useReducedMotion();const item=(delay:number)=>reduced?{}:{initial:{opacity:0,y:14},animate:{opacity:1,y:0},transition:{delay,duration:.42}};return <div className="build-mock" aria-label="Animowana wizualizacja budowania responsywnej strony"><motion.div className="browser" {...item(.2)}><div className="browser-bar"><i/><i/><i/><span>twojafirma.pl</span></div><motion.div className="mock-nav" {...item(.7)}><b>FIRMA</b><span/><span/><span/></motion.div><motion.div className="mock-hero" {...item(1.05)}><div><span/><strong/><strong/><button>Sprawdź ofertę</button></div><div className="mock-photo"/></motion.div><motion.div className="mock-form" {...item(1.7)}><span/><span/><b>Wyślij zapytanie</b></motion.div></motion.div><motion.div className="phone" {...item(1.35)}><i/><strong/><span/><span/><button/></motion.div><motion.div className="ready" {...item(2.25)}><Check size={15}/> Gotowe do publikacji</motion.div><motion.div className="perf" {...item(2.65)}><Zap size={15}/> Szybka i responsywna</motion.div></div>}
+function BuildSequenceHero() {
+  const reduced = useReducedMotion();
+  const item = (delay: number) =>
+    reduced
+      ? {}
+      : {
+          initial: { opacity: 0, y: 14 },
+          animate: { opacity: 1, y: 0 },
+          transition: { delay, duration: 0.42 },
+        };
+  return (
+    <div
+      className="build-mock"
+      aria-label="Animowana wizualizacja budowania responsywnej strony"
+    >
+      <motion.div className="browser" {...item(0.2)}>
+        <div className="browser-bar">
+          <i />
+          <i />
+          <i />
+          <span>twojafirma.pl</span>
+        </div>
+        <motion.div className="mock-nav" {...item(0.7)}>
+          <b>FIRMA</b>
+          <span />
+          <span />
+          <span />
+        </motion.div>
+        <motion.div className="mock-hero" {...item(1.05)}>
+          <div>
+            <span />
+            <strong />
+            <strong />
+            <button>Sprawdź ofertę</button>
+          </div>
+          <div className="mock-photo" />
+        </motion.div>
+        <motion.div className="mock-form" {...item(1.7)}>
+          <span />
+          <span />
+          <b>Wyślij zapytanie</b>
+        </motion.div>
+      </motion.div>
+      <motion.div className="phone" {...item(1.35)}>
+        <i />
+        <strong />
+        <span />
+        <span />
+        <button />
+      </motion.div>
+      <motion.div className="ready" {...item(2.25)}>
+        <Check size={15} /> Gotowe do publikacji
+      </motion.div>
+      <motion.div className="perf" {...item(2.65)}>
+        <Zap size={15} /> Szybka i responsywna
+      </motion.div>
+    </div>
+  );
+}
 
-function Hero({openContact}:{openContact:()=>void}){return <section className="hero" id="top"><Container className="hero-grid"><div className="hero-copy"><span className="eyebrow">STRONY WWW DLA BIZNESU W POLSCE</span><h1>Nowoczesna strona, która wygląda profesjonalnie i <em>pomaga zdobywać klientów.</em></h1><p>Projektuję szybkie, responsywne strony firmowe i sklepy internetowe — od pierwszej koncepcji po publikację na Twojej domenie.</p><div className="hero-actions"><Button onClick={openContact}>Porozmawiajmy o Twojej stronie <MessageCircle size={18}/></Button><Button href="#portfolio" variant="secondary">Zobacz realizacje <ArrowRight size={18}/></Button></div><div className="hero-trust"><span><Check/>Realizacja od 3–5 dni</span><span><Check/>Rozliczenie po akceptacji</span><span><Check/>Bez miesięcznego abonamentu za standardowy hosting</span></div><small>Termin zależy od zakresu projektu i dostarczenia materiałów.</small></div><BuildSequenceHero/></Container></section>}
+function Hero({ openContact }: { openContact: () => void }) {
+  return (
+    <section className="hero" id="top">
+      <Container className="hero-grid">
+        <div className="hero-copy">
+          <span className="eyebrow">STRONY WWW DLA BIZNESU W POLSCE</span>
+          <h1>
+            Nowoczesna strona, która wygląda profesjonalnie i{" "}
+            <em>pomaga zdobywać klientów.</em>
+          </h1>
+          <p>
+            Projektuję szybkie, responsywne strony firmowe i sklepy internetowe
+            — od pierwszej koncepcji po publikację na Twojej domenie.
+          </p>
+          <div className="hero-actions">
+            <Button onClick={openContact}>
+              Porozmawiajmy o Twojej stronie <MessageCircle size={18} />
+            </Button>
+            <Button href="#portfolio" variant="secondary">
+              Zobacz realizacje <ArrowRight size={18} />
+            </Button>
+          </div>
+          <div className="hero-trust">
+            <span>
+              <Check />
+              Realizacja od 3–5 dni
+            </span>
+            <span>
+              <Check />
+              Rozliczenie po akceptacji
+            </span>
+            <span>
+              <Check />
+              Bez miesięcznego abonamentu za standardowy hosting
+            </span>
+          </div>
+          <small>
+            Termin zależy od zakresu projektu i dostarczenia materiałów.
+          </small>
+        </div>
+        <BuildSequenceHero />
+      </Container>
+    </section>
+  );
+}
 
-function TrustBar(){const items=[[MonitorSmartphone,"Strona dopasowana do telefonu i komputera"],[Globe2,"Podpięcie domeny i publikacja"],[ShieldCheck,"Bezpieczne rozliczenie po akceptacji"],[Rocket,"Wsparcie przy uruchomieniu"]] as const;return <div className="trustbar"><Container>{items.map(([I,t])=><div key={t}><I/><span>{t}</span></div>)}</Container></div>}
+function TrustBar() {
+  const items = [
+    [MonitorSmartphone, "Strona dopasowana do telefonu i komputera"],
+    [Globe2, "Podpięcie domeny i publikacja"],
+    [ShieldCheck, "Bezpieczne rozliczenie po akceptacji"],
+    [Rocket, "Wsparcie przy uruchomieniu"],
+  ] as const;
+  return (
+    <div className="trustbar">
+      <Container>
+        {items.map(([I, t]) => (
+          <div key={t}>
+            <I />
+            <span>{t}</span>
+          </div>
+        ))}
+      </Container>
+    </div>
+  );
+}
 
-function ProjectCard({p,index,onDetails}:{p:typeof projects[number],index:number,onDetails:(p:typeof projects[number])=>void}){return <motion.article className={`project-card ${p.wide?"wide":""}`} initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{delay:index*.06}}><div className={`art ${p.tone}`}><div className="art-browser"><div/><section><i/><b/><span/><span/></section></div><span className="project-badge">{p.badge}</span></div><div className="project-copy"><small>{p.cat}</small><h3>{p.title}</h3><p>{p.desc}</p><div className="tags">{p.tags.map(x=><span key={x}>{x}</span>)}</div><div className="project-links">{p.url&&<a className="text-link" href={p.url} target="_blank" rel="noopener noreferrer">Otwórz projekt <ExternalLink size={15}/></a>}<button className="text-link muted-link" onClick={()=>onDetails(p)}>Zobacz zakres <ArrowRight size={15}/></button></div></div></motion.article>}
-function Portfolio({onDetails}:{onDetails:(p:typeof projects[number])=>void}){const cats=["Wszystkie","Platformy","Lokalny biznes","Motoryzacja","Gastronomia","Beauty"];const [filter,setFilter]=useState("Wszystkie");return <section className="dark-section" id="portfolio"><Container><Heading dark eyebrow="REALIZACJE I WERSJE DEMO" title="Zobacz, jak może wyglądać Twój biznes w internecie." text="Każdy projekt powstaje pod konkretną branżę, klientów i cel biznesowy — bez kopiowania jednego szablonu."/><div className="filters" aria-label="Filtry realizacji">{cats.map(c=><button aria-pressed={filter===c} onClick={()=>setFilter(c)} key={c}>{c}</button>)}</div><div className="bento">{projects.filter(p=>filter==="Wszystkie"||p.cat===filter).map((p,i)=><ProjectCard key={p.title} p={p} index={i} onDetails={onDetails}/>)}</div></Container></section>}
+function ProjectCard({
+  p,
+  index,
+  onDetails,
+}: {
+  p: (typeof projects)[number];
+  index: number;
+  onDetails: (p: (typeof projects)[number]) => void;
+}) {
+  const preview = (
+    <Image
+      src={p.image}
+      alt={p.alt}
+      fill
+      sizes={
+        p.wide
+          ? "(min-width: 950px) 54vw, 100vw"
+          : "(min-width: 700px) 50vw, 100vw"
+      }
+      className="project-image"
+    />
+  );
+  return (
+    <motion.article
+      className={`project-card ${p.wide ? "wide" : ""}`}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.06 }}
+    >
+      <div className={`art real-preview ${p.tone}`}>
+        {p.url ? (
+          <a
+            className="preview-link"
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={p.title}
+          >
+            {preview}
+          </a>
+        ) : (
+          preview
+        )}
+        <span className="project-badge">{p.badge}</span>
+      </div>
+      <div className="project-copy">
+        <small>{p.cat}</small>
+        <h3>{p.title}</h3>
+        <p>{p.desc}</p>
+        <div className="tags">
+          {p.tags.map((x) => (
+            <span key={x}>{x}</span>
+          ))}
+        </div>
+        <div className="project-links">
+          {p.url && (
+            <a
+              className="text-link"
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Otwórz projekt <ExternalLink size={15} />
+            </a>
+          )}
+          <button className="text-link muted-link" onClick={() => onDetails(p)}>
+            Zobacz zakres <ArrowRight size={15} />
+          </button>
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+function Portfolio({
+  onDetails,
+}: {
+  onDetails: (p: (typeof projects)[number]) => void;
+}) {
+  const cats = [
+    "Wszystkie",
+    "Platformy",
+    "Lokalny biznes",
+    "Motoryzacja",
+    "Gastronomia",
+    "Beauty i usługi",
+  ];
+  const [filter, setFilter] = useState("Wszystkie");
+  return (
+    <section className="dark-section" id="portfolio">
+      <Container>
+        <Heading
+          dark
+          eyebrow="REALIZACJE I WERSJE DEMO"
+          title="Zobacz, jak może wyglądać Twój biznes w internecie."
+          text="Każdy projekt powstaje pod konkretną branżę, klientów i cel biznesowy — bez kopiowania jednego szablonu."
+        />
+        <div className="filters" aria-label="Filtry realizacji">
+          {cats.map((c) => (
+            <button
+              aria-pressed={filter === c}
+              onClick={() => setFilter(c)}
+              key={c}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        <div className="bento">
+          {projects
+            .filter((p) => filter === "Wszystkie" || p.cat === filter)
+            .map((p, i) => (
+              <ProjectCard
+                key={p.title}
+                p={p}
+                index={i}
+                onDetails={onDetails}
+              />
+            ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
 
-const services=[[Code2,"Strony firmowe","Profesjonalna prezentacja firmy, oferty, lokalizacji i najważniejszych kanałów kontaktu."],[Rocket,"Landing page","Skoncentrowana strona przygotowana pod konkretną usługę, kampanię lub pozyskiwanie zapytań."],[ShoppingBag,"Sklepy internetowe","Katalog produktów, koszyk, płatności online i konfiguracja metod dostawy."],[Layers3,"Dedykowane rozwiązania","Kalkulatory, formularze wieloetapowe, panele użytkowników i logika dopasowana do procesu firmy."]] as const;
-function Services(){return <section className="light-section" id="oferta"><Container><Heading eyebrow="OFERTA" title="Od prostej wizytówki po rozbudowany sklep."/><div className="service-grid">{services.map(([I,t,d])=><Reveal key={t}><article className="service-card"><I/><h3>{t}</h3><p>{d}</p></article></Reveal>)}</div></Container></section>}
+const services = [
+  [
+    Code2,
+    "Strony firmowe",
+    "Profesjonalna prezentacja firmy, oferty, lokalizacji i najważniejszych kanałów kontaktu.",
+  ],
+  [
+    Rocket,
+    "Landing page",
+    "Skoncentrowana strona przygotowana pod konkretną usługę, kampanię lub pozyskiwanie zapytań.",
+  ],
+  [
+    ShoppingBag,
+    "Sklepy internetowe",
+    "Katalog produktów, koszyk, płatności online i konfiguracja metod dostawy.",
+  ],
+  [
+    Layers3,
+    "Dedykowane rozwiązania",
+    "Kalkulatory, formularze wieloetapowe, panele użytkowników i logika dopasowana do procesu firmy.",
+  ],
+] as const;
+function Services() {
+  return (
+    <section className="light-section" id="oferta">
+      <Container>
+        <Heading
+          eyebrow="OFERTA"
+          title="Od prostej wizytówki po rozbudowany sklep."
+        />
+        <div className="service-grid">
+          {services.map(([I, t, d]) => (
+            <Reveal key={t}>
+              <article className="service-card">
+                <I />
+                <h3>{t}</h3>
+                <p>{d}</p>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
 
-const biz=["Usługi lokalne","Gastronomia","Motoryzacja","Beauty","Budownictwo","Sklep"],types=["Strona wizytówka","Landing page","Sklep internetowy","Dedykowana platforma"],features=["Formularz kontaktowy","WhatsApp","Rezerwacja","Kalkulator","Galeria","Płatności online","Wersje językowe","Panel użytkownika"];
-function briefText(b:string,t:string,f:string[]){return `Brief projektu strony\nBranża: ${b||"do ustalenia"}\nRodzaj projektu: ${t||"do ustalenia"}\nPotrzebne funkcje: ${f.length?f.join(", "):"do ustalenia"}\nProszę o kontakt w sprawie wyceny.`}
-function Selector({toast,openContact}:{toast:(s:string)=>void,openContact:(brief?:string)=>void}){const [business,setBusiness]=useState("");const [type,setType]=useState("");const [selected,setSelected]=useState<string[]>([]);const custom=type==="Sklep internetowy"||type==="Dedykowana platforma"||selected.some(x=>["Płatności online","Panel użytkownika","Kalkulator","Rezerwacja"].includes(x));const brief=briefText(business,type,selected);const copy=async()=>{await navigator.clipboard.writeText(brief);toast("Brief został skopiowany.")};return <section className="selector-section"><Container><Reveal><div className="selector"><Heading eyebrow="DOPASUJ ZAKRES" title="Jakiej strony potrzebuje Twój biznes?"/><fieldset><legend><b>01</b> Rodzaj biznesu</legend><div className="choices">{biz.map(x=><button className={business===x?"active":""} onClick={()=>setBusiness(x)} key={x}>{x}</button>)}</div></fieldset><fieldset><legend><b>02</b> Typ projektu</legend><div className="choices">{types.map(x=><button className={type===x?"active":""} onClick={()=>setType(x)} key={x}>{x}</button>)}</div></fieldset><fieldset><legend><b>03</b> Potrzebne funkcje <small>(możesz wybrać kilka)</small></legend><div className="choices">{features.map(x=><button aria-pressed={selected.includes(x)} className={selected.includes(x)?"active":""} onClick={()=>setSelected(s=>s.includes(x)?s.filter(i=>i!==x):[...s,x])} key={x}>{selected.includes(x)&&<Check size={14}/>} {x}</button>)}</div></fieldset><div className="recommend"><span>Rekomendowany kierunek</span><h3>{custom?"Projekt indywidualny":"Pakiet Wizytówka"}</h3><p>Dokładna wycena zależy od zakresu i integracji.</p><div><Button variant="secondary" onClick={copy}><Clipboard size={17}/> Skopiuj brief</Button><Button onClick={()=>openContact(brief)}>Wyślij zapytanie <ArrowRight size={17}/></Button></div></div></div></Reveal></Container></section>}
+const biz = [
+    "Usługi lokalne",
+    "Gastronomia",
+    "Motoryzacja",
+    "Beauty",
+    "Budownictwo",
+    "Sklep",
+  ],
+  types = [
+    "Strona wizytówka",
+    "Landing page",
+    "Sklep internetowy",
+    "Dedykowana platforma",
+  ],
+  features = [
+    "Formularz kontaktowy",
+    "WhatsApp",
+    "Rezerwacja",
+    "Kalkulator",
+    "Galeria",
+    "Płatności online",
+    "Wersje językowe",
+    "Panel użytkownika",
+  ];
+function briefText(locale: Locale, b: string, t: string, f: string[]) {
+  const tr = (value: string) => translate(locale, value);
+  return `${tr("Brief projektu strony")}\n${tr("Branża: ")}${b ? tr(b) : tr("do ustalenia")}\n${tr("Rodzaj projektu: ")}${t ? tr(t) : tr("do ustalenia")}\n${tr("Potrzebne funkcje: ")}${f.length ? f.map(tr).join(", ") : tr("do ustalenia")}\n${tr("Proszę o kontakt w sprawie wyceny.")}`;
+}
+function Selector({
+  toast,
+  openContact,
+  locale,
+}: {
+  toast: (s: string) => void;
+  openContact: (brief?: string) => void;
+  locale: Locale;
+}) {
+  const [business, setBusiness] = useState("");
+  const [type, setType] = useState("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const custom =
+    type === "Sklep internetowy" ||
+    type === "Dedykowana platforma" ||
+    selected.some((x) =>
+      [
+        "Płatności online",
+        "Panel użytkownika",
+        "Kalkulator",
+        "Rezerwacja",
+      ].includes(x),
+    );
+  const brief = briefText(locale, business, type, selected);
+  const copy = async () => {
+    await navigator.clipboard.writeText(brief);
+    toast("Brief został skopiowany.");
+  };
+  return (
+    <section className="selector-section">
+      <Container>
+        <Reveal>
+          <div className="selector">
+            <Heading
+              eyebrow="DOPASUJ ZAKRES"
+              title="Jakiej strony potrzebuje Twój biznes?"
+            />
+            <fieldset>
+              <legend>
+                <b>01</b> Rodzaj biznesu
+              </legend>
+              <div className="choices">
+                {biz.map((x) => (
+                  <button
+                    className={business === x ? "active" : ""}
+                    onClick={() => setBusiness(x)}
+                    key={x}
+                  >
+                    {x}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>
+                <b>02</b> Typ projektu
+              </legend>
+              <div className="choices">
+                {types.map((x) => (
+                  <button
+                    className={type === x ? "active" : ""}
+                    onClick={() => setType(x)}
+                    key={x}
+                  >
+                    {x}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>
+                <b>03</b> Potrzebne funkcje <small>(możesz wybrać kilka)</small>
+              </legend>
+              <div className="choices">
+                {features.map((x) => (
+                  <button
+                    aria-pressed={selected.includes(x)}
+                    className={selected.includes(x) ? "active" : ""}
+                    onClick={() =>
+                      setSelected((s) =>
+                        s.includes(x) ? s.filter((i) => i !== x) : [...s, x],
+                      )
+                    }
+                    key={x}
+                  >
+                    {selected.includes(x) && <Check size={14} />} {x}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <div className="recommend">
+              <span>Rekomendowany kierunek</span>
+              <h3>{custom ? "Projekt indywidualny" : "Pakiet Wizytówka"}</h3>
+              <p>Dokładna wycena zależy od zakresu i integracji.</p>
+              <div>
+                <Button variant="secondary" onClick={copy}>
+                  <Clipboard size={17} /> Skopiuj brief
+                </Button>
+                <Button onClick={() => openContact(brief)}>
+                  Wyślij zapytanie <ArrowRight size={17} />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
 
-const packages=[{name:"Pakiet Wizytówka",price:"1 000 PLN",items:["1–3 kluczowe sekcje lub podstrony","Pełna responsywność na telefonie i komputerze","Podpięcie własnej domeny","Hosting bez miesięcznego abonamentu","Formularz, WhatsApp lub e-mail","Podstawowa optymalizacja SEO","Publikacja i testy","Standardowy termin realizacji: 3–5 dni"],cta:"Wybieram stronę wizytówkę"},{name:"Projekt indywidualny / Sklep",price:"od 2 500 PLN",items:["Rozbudowana struktura strony","Katalog produktów lub usług","Koszyk i proces zakupowy","Integracja płatności online","Konfiguracja metod dostawy","Dedykowane formularze i logika","Optymalizacja SEO i wydajności","Indywidualny harmonogram realizacji"],cta:"Porozmawiajmy o projekcie"}];
-function Pricing({openContact}:{openContact:()=>void}){return <section className="light-section pricing" id="cennik"><Container><Heading eyebrow="PRZEJRZYSTY CENNIK" title="Wiesz, za co płacisz." text="Bez niejasnych pakietów i obowiązkowego miesięcznego abonamentu za utrzymanie standardowej strony."/><div className="pricing-grid">{packages.map((p,i)=><Reveal key={p.name}><article className={`package ${i?"featured":""}`}><small>{p.name}</small><h3>{p.price}</h3><span>ustalony zakres projektu</span><ul>{p.items.map(x=><li key={x}><Check/>{x}</li>)}</ul><Button variant={i?"primary":"emerald"} onClick={openContact}>{p.cta}<ArrowRight size={17}/></Button></article></Reveal>)}</div><p className="payment-highlight"><ShieldCheck/> Rozliczenie po prezentacji i pełnej akceptacji uzgodnionej wersji projektu.</p><p className="price-note"><b>Hosting bez miesięcznego abonamentu dla standardowej strony firmowej.</b> Cena domeny oraz opłaty pobierane przez zewnętrzne systemy płatności, dostawy, poczty lub bazy danych nie są częścią ceny strony. Zakres i końcowa wycena są zawsze potwierdzane przed rozpoczęciem prac.</p></Container></section>}
+const packages = [
+  {
+    name: "Pakiet Wizytówka",
+    price: "1 000 PLN",
+    items: [
+      "1–3 kluczowe sekcje lub podstrony",
+      "Pełna responsywność na telefonie i komputerze",
+      "Podpięcie własnej domeny",
+      "Hosting bez miesięcznego abonamentu",
+      "Formularz, WhatsApp lub e-mail",
+      "Podstawowa optymalizacja SEO",
+      "Publikacja i testy",
+      "Standardowy termin realizacji: 3–5 dni",
+    ],
+    cta: "Wybieram stronę wizytówkę",
+  },
+  {
+    name: "Projekt indywidualny / Sklep",
+    price: "od 2 500 PLN",
+    items: [
+      "Rozbudowana struktura strony",
+      "Katalog produktów lub usług",
+      "Koszyk i proces zakupowy",
+      "Integracja płatności online",
+      "Konfiguracja metod dostawy",
+      "Dedykowane formularze i logika",
+      "Optymalizacja SEO i wydajności",
+      "Indywidualny harmonogram realizacji",
+    ],
+    cta: "Porozmawiajmy o projekcie",
+  },
+];
+function Pricing({ openContact }: { openContact: () => void }) {
+  return (
+    <section className="light-section pricing" id="cennik">
+      <Container>
+        <Heading
+          eyebrow="PRZEJRZYSTY CENNIK"
+          title="Wiesz, za co płacisz."
+          text="Bez niejasnych pakietów i obowiązkowego miesięcznego abonamentu za utrzymanie standardowej strony."
+        />
+        <div className="pricing-grid">
+          {packages.map((p, i) => (
+            <Reveal key={p.name}>
+              <article className={`package ${i ? "featured" : ""}`}>
+                <small>{p.name}</small>
+                <h3>{p.price}</h3>
+                <span>ustalony zakres projektu</span>
+                <ul>
+                  {p.items.map((x) => (
+                    <li key={x}>
+                      <Check />
+                      {x}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  variant={i ? "primary" : "emerald"}
+                  onClick={openContact}
+                >
+                  {p.cta}
+                  <ArrowRight size={17} />
+                </Button>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+        <p className="payment-highlight">
+          <ShieldCheck /> Rozliczenie po prezentacji i pełnej akceptacji
+          uzgodnionej wersji projektu.
+        </p>
+        <p className="price-note">
+          <b>
+            Hosting bez miesięcznego abonamentu dla standardowej strony
+            firmowej.
+          </b>{" "}
+          Cena domeny oraz opłaty pobierane przez zewnętrzne systemy płatności,
+          dostawy, poczty lub bazy danych nie są częścią ceny strony. Zakres i
+          końcowa wycena są zawsze potwierdzane przed rozpoczęciem prac.
+        </p>
+      </Container>
+    </section>
+  );
+}
 
-function Process(){const ref=useRef<HTMLDivElement>(null);const {scrollYProgress}=useScroll({target:ref,offset:["start .8","end .5"]});const scaleY=useTransform(scrollYProgress,[0,1],[0,1]);const steps=[["01","Konsultacja","Krótko omawiamy ofertę, klientów, potrzebne funkcje oraz cel strony."],["02","Projekt i wdrożenie","Przygotowuję indywidualny projekt, wersję mobilną, treści i wszystkie uzgodnione integracje."],["03","Domena, testy i rozliczenie","Po akceptacji podpinam domenę, testuję stronę i przekazuję gotowy projekt wraz z dostępami."]];return <section className="process" id="proces"><Container><Heading eyebrow="JAK PRACUJĘ" title="Prosty proces. Jasne zasady. Bez technicznego chaosu."/><div className="steps" ref={ref}><div className="line"><motion.i style={{scaleY}}/></div>{steps.map(([n,t,d])=><Reveal key={n}><article><span>{n}</span><div><h3>{t}</h3><p>{d}</p></div></article></Reveal>)}</div></Container></section>}
-function Benefits(){const items=["Projekt dopasowany do branży","Szybkie działanie na telefonach","Czytelna ścieżka do kontaktu lub zakupu","Brak obowiązkowego abonamentu za standardowy hosting","Dostępy i projekt przekazane właścicielowi","Pomoc przy domenie i publikacji"];return <section className="benefits"><Container><Reveal><div className="benefit-box"><div><span className="eyebrow">DLACZEGO WARTO</span><h2>Strona ma pracować na Twój biznes, nie tylko dobrze wyglądać.</h2></div><ul>{items.map(x=><li key={x}><Check/>{x}</li>)}</ul></div></Reveal></Container></section>}
-function FAQ(){const [open,setOpen]=useState<number|null>(0);return <section className="light-section faq"><Container><Heading eyebrow="FAQ" title="Najczęstsze pytania przed startem."/><div className="faq-list">{faqs.map(([q,a],i)=><article key={q}><h3><button aria-expanded={open===i} aria-controls={`faq-${i}`} onClick={()=>setOpen(open===i?null:i)}>{q}<ChevronDown className={open===i?"up":""}/></button></h3><AnimatePresence initial={false}>{open===i&&<motion.div id={`faq-${i}`} initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}}><p>{a}</p></motion.div>}</AnimatePresence></article>)}</div></Container></section>}
+function Process() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start .8", "end .5"],
+  });
+  const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
+  const steps = [
+    [
+      "01",
+      "Konsultacja",
+      "Krótko omawiamy ofertę, klientów, potrzebne funkcje oraz cel strony.",
+    ],
+    [
+      "02",
+      "Projekt i wdrożenie",
+      "Przygotowuję indywidualny projekt, wersję mobilną, treści i wszystkie uzgodnione integracje.",
+    ],
+    [
+      "03",
+      "Domena, testy i rozliczenie",
+      "Po akceptacji podpinam domenę, testuję stronę i przekazuję gotowy projekt wraz z dostępami.",
+    ],
+  ];
+  return (
+    <section className="process" id="proces">
+      <Container>
+        <Heading
+          eyebrow="JAK PRACUJĘ"
+          title="Prosty proces. Jasne zasady. Bez technicznego chaosu."
+        />
+        <div className="steps" ref={ref}>
+          <div className="line">
+            <motion.i style={{ scaleY }} />
+          </div>
+          {steps.map(([n, t, d]) => (
+            <Reveal key={n}>
+              <article>
+                <span>{n}</span>
+                <div>
+                  <h3>{t}</h3>
+                  <p>{d}</p>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
+function Benefits() {
+  const items = [
+    "Projekt dopasowany do branży",
+    "Szybkie działanie na telefonach",
+    "Czytelna ścieżka do kontaktu lub zakupu",
+    "Brak obowiązkowego abonamentu za standardowy hosting",
+    "Dostępy i projekt przekazane właścicielowi",
+    "Pomoc przy domenie i publikacji",
+  ];
+  return (
+    <section className="benefits">
+      <Container>
+        <Reveal>
+          <div className="benefit-box">
+            <div>
+              <span className="eyebrow">DLACZEGO WARTO</span>
+              <h2>
+                Strona ma pracować na Twój biznes, nie tylko dobrze wyglądać.
+              </h2>
+            </div>
+            <ul>
+              {items.map((x) => (
+                <li key={x}>
+                  <Check />
+                  {x}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+      </Container>
+    </section>
+  );
+}
+function FAQ() {
+  const [open, setOpen] = useState<number | null>(0);
+  return (
+    <section className="light-section faq">
+      <Container>
+        <Heading eyebrow="FAQ" title="Najczęstsze pytania przed startem." />
+        <div className="faq-list">
+          {faqs.map(([q, a], i) => (
+            <article key={q}>
+              <h3>
+                <button
+                  aria-expanded={open === i}
+                  aria-controls={`faq-${i}`}
+                  onClick={() => setOpen(open === i ? null : i)}
+                >
+                  {q}
+                  <ChevronDown className={open === i ? "up" : ""} />
+                </button>
+              </h3>
+              <AnimatePresence initial={false}>
+                {open === i && (
+                  <motion.div
+                    id={`faq-${i}`}
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                  >
+                    <p>{a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </article>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
 
-type FormData={name:string;company:string;industry:string;contact:string;type:string;description:string};
-function ContactForm({toast,initial=""}:{toast:(s:string)=>void,initial?:string}){const [data,setData]=useState<FormData>({name:"",company:"",industry:"",contact:"",type:"",description:initial});const [errors,setErrors]=useState<Record<string,string>>({});const field=(key:keyof FormData,label:string)=><label>{label}<input value={data[key]} onChange={e=>setData({...data,[key]:e.target.value})} aria-invalid={!!errors[key]}/>{errors[key]&&<span role="alert">{errors[key]}</span>}</label>;const submit=async(e:React.FormEvent)=>{e.preventDefault();const er:Record<string,string>={};if(!data.name.trim())er.name="Podaj imię.";if(!data.contact.trim())er.contact="Podaj telefon lub e-mail.";if(!data.description.trim())er.description="Napisz krótko o projekcie.";setErrors(er);if(Object.keys(er).length)return;const text=`Zapytanie o stronę\nImię: ${data.name}\nFirma: ${data.company||"—"}\nBranża: ${data.industry||"—"}\nKontakt: ${data.contact}\nTyp: ${data.type||"—"}\nOpis: ${data.description}`;await navigator.clipboard.writeText(text);toast("Zapytanie skopiowane — dane pozostają w formularzu.");const wa=contactHref("whatsapp",contact.whatsapp,text);if(wa)window.open(wa,"_blank","noopener,noreferrer")};return <form className="contact-form" onSubmit={submit} noValidate>{field("name","Imię *")}{field("company","Nazwa firmy")}{field("industry","Branża")}{field("contact","Telefon lub e-mail *")}<label>Jakiej strony potrzebujesz?<select value={data.type} onChange={e=>setData({...data,type:e.target.value})}><option value="">Wybierz opcję</option>{types.map(x=><option key={x}>{x}</option>)}</select></label><label className="full">Krótko opisz projekt *<textarea rows={4} value={data.description} onChange={e=>setData({...data,description:e.target.value})} aria-invalid={!!errors.description}/>{errors.description&&<span role="alert">{errors.description}</span>}</label><button className="button primary full" type="submit">Skopiuj i wyślij zapytanie <ArrowRight size={18}/></button><p className="form-note full">Formularz nie wysyła danych na serwer. Skopiuje gotowe zapytanie; następnie możesz wysłać je wybranym kanałem.</p></form>}
-function ContactSection({openContact,toast}:{openContact:()=>void,toast:(s:string)=>void}){return <section className="contact-section" id="kontakt"><Container><div className="contact-grid"><div><span className="eyebrow">POROZMAWIAJMY</span><h2>Opowiedz mi, czym zajmuje się Twoja firma.</h2><p>Napisz kilka zdań o swojej działalności. Odpowiem, jaki rodzaj strony będzie najlepszy i jaki zakres warto przygotować.</p><div className="contact-actions"><Button onClick={openContact}>Wyślij zapytanie <ArrowRight size={18}/></Button><motion.a whileHover={{scale:1.02}} whileTap={{scale:.98}} className="button secondary" href={contact.instagram!} target="_blank" rel="noopener noreferrer"><Camera size={18}/> Napisz na Instagramie</motion.a></div><div className="contact-labels"><span>Warszawa / cała Polska</span><span>Współpraca zdalna</span><a href={contact.instagram!} target="_blank" rel="noopener noreferrer">Instagram: @ant0niy07</a></div></div><ContactForm toast={toast}/></div></Container></section>}
+type FormData = {
+  name: string;
+  company: string;
+  industry: string;
+  contact: string;
+  type: string;
+  description: string;
+};
+function ContactForm({
+  toast,
+  initial = "",
+  locale,
+}: {
+  toast: (s: string) => void;
+  initial?: string;
+  locale: Locale;
+}) {
+  const [data, setData] = useState<FormData>({
+    name: "",
+    company: "",
+    industry: "",
+    contact: "",
+    type: "",
+    description: initial,
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const field = (key: keyof FormData, label: string) => (
+    <label>
+      {label}
+      <input
+        value={data[key]}
+        onChange={(e) => setData({ ...data, [key]: e.target.value })}
+        aria-invalid={!!errors[key]}
+      />
+      {errors[key] && <span role="alert">{errors[key]}</span>}
+    </label>
+  );
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const er: Record<string, string> = {};
+    if (!data.name.trim()) er.name = "Podaj imię.";
+    if (!data.contact.trim()) er.contact = "Podaj telefon lub e-mail.";
+    if (!data.description.trim()) er.description = "Napisz krótko o projekcie.";
+    setErrors(er);
+    if (Object.keys(er).length) return;
+    const tr = (value: string) => translate(locale, value);
+    const text = `${tr("Zapytanie o stronę")}\n${tr("Imię: ")}${data.name}\n${tr("Firma: ")}${data.company || "—"}\n${tr("Branża: ")}${data.industry || "—"}\n${tr("Kontakt: ")}${data.contact}\n${tr("Typ: ")}${data.type ? tr(data.type) : "—"}\n${tr("Opis: ")}${data.description}`;
+    await navigator.clipboard.writeText(text);
+    toast("Zapytanie skopiowane — dane pozostają w formularzu.");
+    const wa = contactHref("whatsapp", contact.whatsapp, text);
+    if (wa) window.open(wa, "_blank", "noopener,noreferrer");
+  };
+  return (
+    <form className="contact-form" onSubmit={submit} noValidate>
+      {field("name", "Imię *")}
+      {field("company", "Nazwa firmy")}
+      {field("industry", "Branża")}
+      {field("contact", "Telefon lub e-mail *")}
+      <label>
+        Jakiej strony potrzebujesz?
+        <select
+          value={data.type}
+          onChange={(e) => setData({ ...data, type: e.target.value })}
+        >
+          <option value="">Wybierz opcję</option>
+          {types.map((x) => (
+            <option key={x}>{x}</option>
+          ))}
+        </select>
+      </label>
+      <label className="full">
+        Krótko opisz projekt *
+        <textarea
+          rows={4}
+          value={data.description}
+          onChange={(e) => setData({ ...data, description: e.target.value })}
+          aria-invalid={!!errors.description}
+        />
+        {errors.description && <span role="alert">{errors.description}</span>}
+      </label>
+      <button className="button primary full" type="submit">
+        Skopiuj i wyślij zapytanie <ArrowRight size={18} />
+      </button>
+      <p className="form-note full">
+        Formularz nie wysyła danych na serwer. Skopiuje gotowe zapytanie;
+        następnie możesz wysłać je wybranym kanałem.
+      </p>
+    </form>
+  );
+}
+function ContactSection({
+  openContact,
+  toast,
+  locale,
+}: {
+  openContact: () => void;
+  toast: (s: string) => void;
+  locale: Locale;
+}) {
+  return (
+    <section className="contact-section" id="kontakt">
+      <Container>
+        <div className="contact-grid">
+          <div>
+            <span className="eyebrow">POROZMAWIAJMY</span>
+            <h2>Opowiedz mi, czym zajmuje się Twoja firma.</h2>
+            <p>
+              Napisz kilka zdań o swojej działalności. Odpowiem, jaki rodzaj
+              strony będzie najlepszy i jaki zakres warto przygotować.
+            </p>
+            <div className="contact-actions">
+              <Button onClick={openContact}>
+                Wyślij zapytanie <ArrowRight size={18} />
+              </Button>
+              <motion.a
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="button secondary"
+                href={contact.instagram!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Camera size={18} /> Napisz na Instagramie
+              </motion.a>
+            </div>
+            <div className="contact-labels">
+              <span>Warszawa / cała Polska</span>
+              <span>Współpraca zdalna</span>
+              <a
+                href={contact.instagram!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Instagram: @ant0niy07
+              </a>
+            </div>
+          </div>
+          <ContactForm toast={toast} locale={locale} />
+        </div>
+      </Container>
+    </section>
+  );
+}
 
-function Modal({open,onClose,title,children}:{open:boolean,onClose:()=>void,title:string,children:React.ReactNode}){const box=useRef<HTMLDivElement>(null),last=useRef<HTMLElement|null>(null),id=useId();useEffect(()=>{if(!open)return;last.current=document.activeElement as HTMLElement;document.body.style.overflow="hidden";box.current?.focus();const key=(e:KeyboardEvent)=>{if(e.key==="Escape")onClose();if(e.key==="Tab"&&box.current){const f=[...box.current.querySelectorAll<HTMLElement>('button,a,input,select,textarea,[tabindex]:not([tabindex="-1"])')];if(!f.length)return;const first=f[0],end=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();end.focus()}else if(!e.shiftKey&&document.activeElement===end){e.preventDefault();first.focus()}}};addEventListener("keydown",key);return()=>{document.body.style.overflow="";removeEventListener("keydown",key);last.current?.focus()}},[open,onClose]);return <AnimatePresence>{open&&<motion.div className="modal-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onMouseDown={e=>e.target===e.currentTarget&&onClose()}><motion.div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={id} className="modal" initial={{opacity:0,scale:.96,y:12}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:.98}}><div className="modal-head"><h2 id={id}>{title}</h2><button aria-label="Zamknij" onClick={onClose}><X/></button></div>{children}</motion.div></motion.div>}</AnimatePresence>}
-function Footer(){return <footer><Container><div className="footer-top"><a className="brand" href="#top">ant0niy07 <small>Web Development</small></a><nav>{nav.map(([n,id])=><a key={id} href={`#${id}`}>{n}</a>)}<a href="/polityka-prywatnosci">Polityka prywatności</a></nav></div><div className="footer-bottom"><p>Hosting bez miesięcznego abonamentu dla standardowej strony firmowej. Domena i usługi zewnętrzne są płatne osobno.</p><a href={contact.instagram!} target="_blank" rel="noopener noreferrer">Designed &amp; Developed by @ant0niy07</a></div></Container></footer>}
-export default function PortfolioSite(){const [contactOpen,setContactOpen]=useState(false),[brief,setBrief]=useState(""),[detail,setDetail]=useState<typeof projects[number]|null>(null),[toast,setToast]=useState("");const show=(s:string)=>{setToast(s);setTimeout(()=>setToast(""),3200)};const openContact=(b="")=>{setBrief(b);setContactOpen(true)};return <><Header openContact={()=>openContact()}/><main><Hero openContact={()=>openContact()}/><TrustBar/><Portfolio onDetails={setDetail}/><Services/><Selector toast={show} openContact={openContact}/><Pricing openContact={()=>openContact()}/><Process/><Benefits/><FAQ/><ContactSection openContact={()=>openContact()} toast={show}/></main><Footer/><Modal open={contactOpen} onClose={()=>setContactOpen(false)} title="Opowiedz o swoim projekcie"><p className="modal-intro">Ten kanał kontaktu jest obecnie konfigurowany. Napisz do mnie na Instagramie lub skorzystaj z formularza.</p><a className="instagram-link" href={contact.instagram!} target="_blank" rel="noopener noreferrer"><Camera/> Napisz do @ant0niy07 <ExternalLink size={15}/></a><ContactForm toast={show} initial={brief}/></Modal><Modal open={!!detail} onClose={()=>setDetail(null)} title={detail?.title||"Szczegóły projektu"}><div className="case-detail"><span>{detail?.badge}</span><p>{detail?.desc}</p><p>Zakres może obejmować: {detail?.tags.join(", ")}.</p><Button onClick={()=>{setDetail(null);openContact(`Interesuje mnie projekt podobny do: ${detail?.title}`)}}>Omów podobny projekt <ArrowRight size={17}/></Button></div></Modal><AnimatePresence>{toast&&<motion.div role="status" aria-live="polite" className="toast" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} exit={{opacity:0,y:10}}><Check/> {toast}</motion.div>}</AnimatePresence></>}
+function Modal({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const box = useRef<HTMLDivElement>(null),
+    last = useRef<HTMLElement | null>(null),
+    id = useId();
+  useEffect(() => {
+    if (!open) return;
+    last.current = document.activeElement as HTMLElement;
+    document.body.style.overflow = "hidden";
+    box.current?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab" && box.current) {
+        const f = [
+          ...box.current.querySelectorAll<HTMLElement>(
+            'button,a,input,select,textarea,[tabindex]:not([tabindex="-1"])',
+          ),
+        ];
+        if (!f.length) return;
+        const first = f[0],
+          end = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          end.focus();
+        } else if (!e.shiftKey && document.activeElement === end) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    addEventListener("keydown", key);
+    return () => {
+      document.body.style.overflow = "";
+      removeEventListener("keydown", key);
+      last.current?.focus();
+    };
+  }, [open, onClose]);
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="modal-backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+        >
+          <motion.div
+            ref={box}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={id}
+            className="modal"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+          >
+            <div className="modal-head">
+              <h2 id={id}>{title}</h2>
+              <button aria-label="Zamknij" onClick={onClose}>
+                <X />
+              </button>
+            </div>
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+function Footer({ locale }: { locale: Locale }) {
+  return (
+    <footer>
+      <Container>
+        <div className="footer-top">
+          <a className="brand" href="#top">
+            ant0niy07 <small>Web Development</small>
+          </a>
+          <nav>
+            {nav.map(([n, id]) => (
+              <a key={id} href={`#${id}`}>
+                {n}
+              </a>
+            ))}
+            <Link href={`/${locale}/polityka-prywatnosci`}>Polityka prywatności</Link>
+          </nav>
+        </div>
+        <div className="footer-bottom">
+          <p>
+            Hosting bez miesięcznego abonamentu dla standardowej strony
+            firmowej. Domena i usługi zewnętrzne są płatne osobno.
+          </p>
+          <a
+            href={contact.instagram!}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Designed &amp; Developed by @ant0niy07
+          </a>
+        </div>
+      </Container>
+    </footer>
+  );
+}
+export default function PortfolioSite({ locale = "pl" }: { locale?: Locale }) {
+  useLocalizedDom(locale);
+  const [contactOpen, setContactOpen] = useState(false),
+    [brief, setBrief] = useState(""),
+    [detail, setDetail] = useState<(typeof projects)[number] | null>(null),
+    [toast, setToast] = useState("");
+  const show = (s: string) => {
+    setToast(translate(locale, s));
+    setTimeout(() => setToast(""), 3200);
+  };
+  const openContact = (b = "") => {
+    setBrief(b);
+    setContactOpen(true);
+  };
+  return (
+    <>
+      <Header locale={locale} openContact={() => openContact()} />
+      <main>
+        <Hero openContact={() => openContact()} />
+        <TrustBar />
+        <Portfolio onDetails={setDetail} />
+        <Services />
+        <Selector toast={show} openContact={openContact} locale={locale} />
+        <Pricing openContact={() => openContact()} />
+        <Process />
+        <Benefits />
+        <FAQ />
+        <ContactSection
+          openContact={() => openContact()}
+          toast={show}
+          locale={locale}
+        />
+      </main>
+      <Footer locale={locale} />
+      <Modal
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        title="Opowiedz o swoim projekcie"
+      >
+        <p className="modal-intro">
+          Ten kanał kontaktu jest obecnie konfigurowany. Napisz do mnie na
+          Instagramie lub skorzystaj z formularza.
+        </p>
+        <a
+          className="instagram-link"
+          href={contact.instagram!}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Camera /> Napisz do @ant0niy07 <ExternalLink size={15} />
+        </a>
+        <ContactForm toast={show} initial={brief} locale={locale} />
+      </Modal>
+      <Modal
+        open={!!detail}
+        onClose={() => setDetail(null)}
+        title={detail?.title || "Szczegóły projektu"}
+      >
+        <div className="case-detail">
+          <span>{detail?.badge}</span>
+          <p>{detail?.desc}</p>
+          <p>Zakres może obejmować: {detail?.tags.join(", ")}.</p>
+          <Button
+            onClick={() => {
+              setDetail(null);
+              openContact(
+                `Interesuje mnie projekt podobny do: ${detail?.title}`,
+              );
+            }}
+          >
+            Omów podobny projekt <ArrowRight size={17} />
+          </Button>
+        </div>
+      </Modal>
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            role="status"
+            aria-live="polite"
+            className="toast"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+          >
+            <Check /> {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
