@@ -147,6 +147,28 @@ describe("portfolio", () => {
       ),
     ).toBeInTheDocument();
   });
+  it("renders fixed locale-specific prices without mixing currencies", () => {
+    const { unmount } = render(<PortfolioSite locale="pl" />);
+    const polishPricing = document.querySelector("#cennik");
+    expect(polishPricing).toHaveTextContent("1 000 PLN");
+    expect(polishPricing).toHaveTextContent("od 2 500 PLN");
+    expect(polishPricing).toHaveTextContent("5 000–25 000 EUR");
+    expect(polishPricing).toHaveTextContent("2 500–7 000 EUR");
+    expect(polishPricing?.textContent).not.toMatch(/руб\.|грн/);
+    unmount();
+
+    render(<PortfolioSite locale="ru" />);
+    const russianPricing = document.querySelector("#cennik");
+    expect(russianPricing).toHaveTextContent("20 тыс. руб. / 10 тыс. грн");
+    expect(russianPricing).toHaveTextContent("от 50 тыс. руб. / 25 тыс. грн");
+    expect(russianPricing).toHaveTextContent(
+      "500 тыс.–2,5 млн руб. / 200 тыс.–1,2 млн грн",
+    );
+    expect(russianPricing).toHaveTextContent(
+      "250–700 тыс. руб. / 100–340 тыс. грн",
+    );
+    expect(russianPricing?.textContent).not.toMatch(/PLN|EUR/);
+  });
   it("handles platform slot grammar and safe bounds", () => {
     expect(platformSlotLabel("pl", 3)).toBe("Pozostały 3 miejsca");
     expect(platformSlotLabel("pl", 2)).toBe("Pozostały 2 miejsca");

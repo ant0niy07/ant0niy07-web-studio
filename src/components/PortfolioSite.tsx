@@ -35,6 +35,7 @@ import { translate } from "@/config/i18n";
 import { useLocalizedDom } from "@/hooks/use-localized-dom";
 import {
   getRemainingPlatformSlots,
+  packagePrices,
   platformPortfolioOffer,
 } from "@/config/pricing";
 
@@ -790,7 +791,7 @@ function Selector({
 const packages = [
   {
     name: "Pakiet Wizytówka",
-    price: "1 000 PLN",
+    price: packagePrices.basic,
     items: [
       "1–3 kluczowe sekcje lub podstrony",
       "Pełna responsywność na telefonie i komputerze",
@@ -805,7 +806,7 @@ const packages = [
   },
   {
     name: "Projekt indywidualny / Sklep",
-    price: "od 2 500 PLN",
+    price: packagePrices.individual,
     items: [
       "Rozbudowana struktura strony",
       "Katalog produktów lub usług",
@@ -829,6 +830,21 @@ export function platformSlotLabel(locale: Locale, slots: number) {
   return `Pozostały ${slots} miejsca`;
 }
 
+function LocalizedPrice({ value }: { value: string }) {
+  const [primary, secondary] = value.split(" / ");
+  return (
+    <strong className="localized-price">
+      <span>{primary}</span>
+      {secondary && (
+        <>
+          <span className="price-slash" aria-hidden="true"> / </span>
+          <span>{secondary}</span>
+        </>
+      )}
+    </strong>
+  );
+}
+
 function PlatformPricing({ locale }: { locale: Locale }) {
   const slots = getRemainingPlatformSlots();
   const finished = slots === 0;
@@ -850,16 +866,16 @@ function PlatformPricing({ locale }: { locale: Locale }) {
         };
   return (
     <Reveal>
-      <article className="platform-pricing" aria-label={copy.name}>
+      <article className="platform-pricing" data-locale={locale} aria-label={copy.name}>
         <div className="platform-standard">
           <span className="platform-label">{copy.name}</span>
-          <strong>{platformPortfolioOffer.standardPrice}</strong>
+          <LocalizedPrice value={platformPortfolioOffer.standardPrice[locale]} />
           <p>{copy.explanation}</p>
         </div>
         <div className={`platform-offer ${finished ? "finished" : ""}`}>
           <span className="offer-badge">PORTFOLIO</span>
           <h3>{copy.heading}</h3>
-          <strong>{platformPortfolioOffer.portfolioPrice}</strong>
+          <LocalizedPrice value={platformPortfolioOffer.portfolioPrice[locale]} />
           <p>{copy.text}</p>
           <span className="slots-badge">{platformSlotLabel(locale, slots)}</span>
         </div>
@@ -888,7 +904,7 @@ function Pricing({
             <Reveal key={p.name}>
               <article className={`package ${i ? "featured" : ""}`}>
                 <small>{p.name}</small>
-                <h3>{p.price}</h3>
+                <h3>{p.price[locale]}</h3>
                 <span>ustalony zakres projektu</span>
                 <ul>
                   {p.items.map((x) => (
