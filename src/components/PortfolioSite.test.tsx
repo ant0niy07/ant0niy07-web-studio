@@ -7,8 +7,9 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import PortfolioSite from "./PortfolioSite";
+import PortfolioSite, { platformSlotLabel } from "./PortfolioSite";
 import { contactHref } from "@/config/contact";
+import { clampPlatformSlots, platformPortfolioOffer } from "@/config/pricing";
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -111,7 +112,7 @@ describe("portfolio", () => {
       screen.getAllByRole("link", { name: "Проекты" })[0],
     ).toBeInTheDocument();
     expect(
-      screen.getAllByRole("button", { name: "Выбрать русский язык" })[0],
+      screen.getAllByRole("button", { name: /Выбрать русский язык/ })[0],
     ).toHaveAttribute("aria-pressed", "true");
     expect(
       screen.getByRole("heading", { name: /Современный сайт/ }),
@@ -126,6 +127,36 @@ describe("portfolio", () => {
     expect(
       new Set(previews.map((image) => image.getAttribute("src"))).size,
     ).toBe(5);
+  });
+  it("uses local SVG flags before language codes", () => {
+    render(<PortfolioSite />);
+    const pl = screen.getAllByRole("button", { name: /Wybierz język polski/ })[0];
+    const ru = screen.getAllByRole("button", { name: /Выбрать русский язык/ })[0];
+    expect(pl.querySelector("img")?.getAttribute("src")).toBe("/flags/pl.svg");
+    expect(ru.querySelector("img")?.getAttribute("src")).toBe("/flags/ru.svg");
+    expect(pl.textContent?.trim()).toBe("PL");
+    expect(ru.textContent?.trim()).toBe("RU");
+  });
+  it("shows dedicated platform prices separately", () => {
+    render(<PortfolioSite />);
+    expect(screen.getByText("5 000–25 000 EUR")).toBeInTheDocument();
+    expect(screen.getByText("2 500–7 000 EUR")).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        platformSlotLabel("pl", clampPlatformSlots(platformPortfolioOffer.remainingSlots)),
+      ),
+    ).toBeInTheDocument();
+  });
+  it("handles platform slot grammar and safe bounds", () => {
+    expect(platformSlotLabel("pl", 3)).toBe("Pozostały 3 miejsca");
+    expect(platformSlotLabel("pl", 2)).toBe("Pozostały 2 miejsca");
+    expect(platformSlotLabel("pl", 1)).toBe("Pozostało 1 miejsce");
+    expect(platformSlotLabel("pl", 0)).toContain("pozostało 0 miejsc");
+    expect(platformSlotLabel("ru", 3)).toBe("Осталось 3 места");
+    expect(platformSlotLabel("ru", 1)).toBe("Осталось 1 место");
+    expect(platformSlotLabel("ru", 0)).toContain("осталось 0 мест");
+    expect(clampPlatformSlots(-4)).toBe(0);
+    expect(clampPlatformSlots(99)).toBe(3);
   });
 });
 describe("configured destinations", () => {

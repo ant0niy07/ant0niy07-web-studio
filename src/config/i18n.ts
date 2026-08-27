@@ -69,6 +69,10 @@ export const ru: Record<string, string> = {
     "Образовательная платформа iLikeLearn",
   "Rozbudowana platforma edukacyjna prezentująca programy nauki, ofertę oraz ścieżkę zapisu dla kursantów. Projekty tej klasy wyceniam indywidualnie — od 2 500 PLN.":
     "Развитая образовательная платформа с учебными программами, предложением и понятным путём записи. Проекты такого уровня оцениваются индивидуально — от 2 500 PLN.",
+  "Indywidualny system do zarządzania szkołą online":
+    "Индивидуальная система управления онлайн-школой",
+  "Indywidualnie zaprojektowana platforma do kompleksowego zarządzania szkołą online, obecnie dostępna w języku rosyjskim. System oferuje osobne role i uprawnienia dla administratora, nauczyciela, testera, ucznia oraz rodzica, a także obsługuje harmonogram, kilka linków do zajęć, zadania domowe, obecność, odwołane i przeniesione lekcje oraz automatyczne rozliczenia na podstawie stawki i liczby odbytych zajęć.":
+    "Индивидуально разработанная платформа для комплексного управления онлайн-школой, интерфейс которой сейчас доступен на русском языке. Система предусматривает отдельные роли и права доступа для администратора, преподавателя, тестировщика, ученика и родителя, а также поддерживает расписание, несколько ссылок на занятия, домашние задания, посещаемость, отменённые и перенесённые уроки и автоматический расчёт оплаты на основании ставки и фактического количества занятий.",
   "Platforma online": "Онлайн-платформа",
   Edukacja: "Образование",
   "Dedykowany UX": "Индивидуальный UX",

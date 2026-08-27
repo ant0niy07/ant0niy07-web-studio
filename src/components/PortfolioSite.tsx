@@ -33,6 +33,10 @@ import { contact, contactHref } from "@/config/contact";
 import type { Locale } from "@/config/i18n";
 import { translate } from "@/config/i18n";
 import { useLocalizedDom } from "@/hooks/use-localized-dom";
+import {
+  getRemainingPlatformSlots,
+  platformPortfolioOffer,
+} from "@/config/pricing";
 
 const nav = [
   ["Realizacje", "portfolio"],
@@ -45,8 +49,8 @@ const projects = [
   {
     cat: "Platformy",
     badge: "Wdrożenie komercyjne",
-    title: "Platforma dla szkoły online iLikeLearn",
-    desc: "Rozbudowana platforma edukacyjna prezentująca programy nauki, ofertę oraz ścieżkę zapisu dla kursantów. Projekty tej klasy wyceniam indywidualnie — od 2 500 PLN.",
+    title: "Indywidualny system do zarządzania szkołą online",
+    desc: "Indywidualnie zaprojektowana platforma do kompleksowego zarządzania szkołą online, obecnie dostępna w języku rosyjskim. System oferuje osobne role i uprawnienia dla administratora, nauczyciela, testera, ucznia oraz rodzica, a także obsługuje harmonogram, kilka linków do zajęć, zadania domowe, obecność, odwołane i przeniesione lekcje oraz automatyczne rozliczenia na podstawie stawki i liczby odbytych zajęć.",
     tags: ["Platforma online", "Edukacja", "Dedykowany UX", "Next.js"],
     tone: "violet",
     wide: true,
@@ -241,18 +245,20 @@ function LanguageSwitcher({
       aria-label={locale === "ru" ? "Выбор языка" : "Wybór języka"}
     >
       <button
-        aria-label="Wybierz język polski"
+        aria-label="Wybierz język polski — PL"
         aria-pressed={locale === "pl"}
         onClick={() => choose("pl")}
       >
-        PL <span aria-hidden="true">🇵🇱</span>
+        <Image src="/flags/pl.svg" alt="" width={20} height={13} />
+        <span>PL</span>
       </button>
       <button
-        aria-label="Выбрать русский язык"
+        aria-label="Выбрать русский язык — RU"
         aria-pressed={locale === "ru"}
         onClick={() => choose("ru")}
       >
-        RU
+        <Image src="/flags/ru.svg" alt="" width={20} height={13} />
+        <span>RU</span>
       </button>
     </div>
   );
@@ -813,7 +819,62 @@ const packages = [
     cta: "Porozmawiajmy o projekcie",
   },
 ];
-function Pricing({ openContact }: { openContact: () => void }) {
+export function platformSlotLabel(locale: Locale, slots: number) {
+  if (slots === 0)
+    return locale === "pl"
+      ? "Oferta portfolio zakończona — pozostało 0 miejsc"
+      : "Предложение для портфолио завершено — осталось 0 мест";
+  if (locale === "ru") return `Осталось ${slots} ${slots === 1 ? "место" : "места"}`;
+  if (slots === 1) return "Pozostało 1 miejsce";
+  return `Pozostały ${slots} miejsca`;
+}
+
+function PlatformPricing({ locale }: { locale: Locale }) {
+  const slots = getRemainingPlatformSlots();
+  const finished = slots === 0;
+  const copy =
+    locale === "pl"
+      ? {
+          name: "Dedykowana platforma internetowa",
+          explanation:
+            "Końcowa cena zależy od liczby modułów, ról użytkowników, integracji, stopnia rozbudowania systemu oraz oczekiwanego terminu realizacji. Projekty wymagające priorytetowego lub przyspieszonego wdrożenia są wyceniane wyżej.",
+          heading: "Specjalna cena dla pierwszych 3 projektów",
+          text: "Pierwsze trzy dedykowane platformy realizuję w specjalnej cenie, ponieważ zostaną zaprezentowane w moim portfolio.",
+        }
+      : {
+          name: "Индивидуальная веб-платформа",
+          explanation:
+            "Итоговая стоимость зависит от количества модулей, пользовательских ролей, интеграций, сложности системы и требуемого срока реализации. Проекты с приоритетной или ускоренной разработкой оцениваются дороже.",
+          heading: "Специальная цена на первые 3 проекта",
+          text: "Первые три индивидуальные платформы я реализую по специальной цене, поскольку они будут представлены в моём портфолио.",
+        };
+  return (
+    <Reveal>
+      <article className="platform-pricing" aria-label={copy.name}>
+        <div className="platform-standard">
+          <span className="platform-label">{copy.name}</span>
+          <strong>{platformPortfolioOffer.standardPrice}</strong>
+          <p>{copy.explanation}</p>
+        </div>
+        <div className={`platform-offer ${finished ? "finished" : ""}`}>
+          <span className="offer-badge">PORTFOLIO</span>
+          <h3>{copy.heading}</h3>
+          <strong>{platformPortfolioOffer.portfolioPrice}</strong>
+          <p>{copy.text}</p>
+          <span className="slots-badge">{platformSlotLabel(locale, slots)}</span>
+        </div>
+      </article>
+    </Reveal>
+  );
+}
+
+function Pricing({
+  openContact,
+  locale,
+}: {
+  openContact: () => void;
+  locale: Locale;
+}) {
   return (
     <section className="light-section pricing" id="cennik">
       <Container>
@@ -848,6 +909,7 @@ function Pricing({ openContact }: { openContact: () => void }) {
             </Reveal>
           ))}
         </div>
+        <PlatformPricing locale={locale} />
         <p className="payment-highlight">
           <ShieldCheck /> Rozliczenie po prezentacji i pełnej akceptacji
           uzgodnionej wersji projektu.
@@ -1271,7 +1333,7 @@ export default function PortfolioSite({ locale = "pl" }: { locale?: Locale }) {
         <Portfolio onDetails={setDetail} />
         <Services />
         <Selector toast={show} openContact={openContact} locale={locale} />
-        <Pricing openContact={() => openContact()} />
+        <Pricing openContact={() => openContact()} locale={locale} />
         <Process />
         <Benefits />
         <FAQ />
